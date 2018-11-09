@@ -1,4 +1,4 @@
-# K-LUT Technology Mapping
+# FlowMap K-LUT Technology Mapping
 Assignment of CS 5160-00 FPGA Architecture & CAD.
 
 # Description
