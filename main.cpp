@@ -132,10 +132,11 @@ void labeling()
 		}
 	}
 
+	cout << "[ ";
 	for(int i = 0; i < num_merge+1; i++){
 		cout << Nt_p_index[i] <<" ";
 	}
-	cout << endl;
+	cout << "]" << endl;
 
 	// fill in Nt_p
 	for(int i = 0; i < M; i++){
@@ -143,14 +144,14 @@ void labeling()
 			for(int j = 0; j < num_merge + 1; j++){
 				if(Nt_p_index[j] == current_node + 1){
 					if(input[i]){
-						cout << i << " " << " zz" << endl;
+						//cout << i << " " << " zz" << endl;
 						Nt_p[j + (num_merge + 1)*0] = 1;
 					}
 					else{
 						list<int>::iterator k;
 						for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
 							if(pred_ret[*k] != -10){
-								cout << i << " " << *k << " zz" << endl;
+								//cout << i << " " << *k << " zz" << endl;
 								Nt_p[j + (num_merge + 1)*(*k)] = 1;
 							}
 						}
@@ -162,14 +163,14 @@ void labeling()
 			for(int j = 0; j < num_merge + 1; j++){
 				if(Nt_p_index[j] == i + 1){
 					if(input[i]){
-						cout << i << " " << " zz" << endl;
+						//cout << i << " " << " zz" << endl;
 						Nt_p[j + (num_merge + 1)*0] = 1;
 					}
 					else{
 					list<int>::iterator k;
 						for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
 							if(pred_ret[*k] != -10){
-								cout << i << " " << *k << " zz" << endl;
+								//cout << i << " " << *k << " zz" << endl;
 								Nt_p[j + (num_merge + 1)*(*k)] = 1;
 							}
 						}
@@ -187,6 +188,65 @@ void labeling()
 	}
 
 	// Nt' -> Nt''
+	int num_mid = num_merge -1;
+	int Nt_pp_num_node = 2 * num_mid + 2;
+	int *Nt_pp = new int[Nt_pp_num_node*Nt_pp_num_node]; // including s(0)
+	int *Nt_pp_index = new int[Nt_pp_num_node];
+
+	for(int i = 0; i < Nt_pp_num_node; i++){
+		for(int j = 0; j < Nt_pp_num_node; j++){
+			Nt_pp[i*Nt_pp_num_node+j] = 0;
+		}
+	}
+
+	offset = 1;
+	Nt_pp_index[0] = 0; // s(PI)
+	Nt_pp_index[Nt_pp_num_node-1] = current_node + 1; // PO
+	
+	// construct index array
+	for(int i = 0 ; i < (Nt_pp_num_node)/2-1; i++){
+		Nt_pp_index[2*offset-1] = Nt_p_index[offset];
+		Nt_pp_index[2*offset] = -Nt_p_index[offset];
+		offset++;
+	}
+
+	cout << "[ ";
+	for(int i = 0 ; i < Nt_pp_num_node; i++){
+		cout << Nt_pp_index[i] << " "; 
+	}
+	cout << "]" << endl;
+
+	// fill in Nt_pp
+	// mid node decompose
+	for(int i = 1; i < Nt_pp_num_node-1; i = i+2){
+		Nt_pp[i*Nt_pp_num_node+(i+1)] = 1;
+	}
+
+	// for PI(s)
+	for(int j = 0; j < num_merge+1; j++){
+		if(Nt_p[0*(num_merge+1)+j])
+			Nt_pp[0*Nt_pp_num_node+(2*j-1)] = INF;
+	}
+
+	// for PO
+	for(int i = 0; i < num_merge+1; i++){
+		if(Nt_p[i*(num_merge+1)+(num_merge)])
+			Nt_pp[(2*i-1)*Nt_pp_num_node+Nt_pp_num_node-1] = INF;
+	}
+	// for mid node
+	for(int i = 1; i < num_merge; i++){
+		for(int j = 1; j < num_merge; j++){
+			if(Nt_p[i*(num_merge+1)+j])
+				Nt_pp[(2*i)*Nt_pp_num_node+(2*j-1)] = INF;
+		}
+	}
+
+	for(int i = 0; i < Nt_pp_num_node; i++){
+		for(int j = 0; j < Nt_pp_num_node; j++){
+			cout << Nt_pp[i*Nt_pp_num_node+j] <<" ";
+		}
+		cout << endl;
+	}
 
 
 
