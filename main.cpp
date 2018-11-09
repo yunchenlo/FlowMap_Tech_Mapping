@@ -9,18 +9,22 @@
 
 using namespace std;
 
+#define INF 100
+
 // register funtions
 void read_aag(const string infile_name);
 void topologicalSort();
-void BFS(int Start);
+int* BFS(int Start);
+void labeling();
 void printArray();
+void delete_mem();
 
 // global variable
-int M=0, I=0, O=0;
+int M=0, I=0, O=0, K=0;
 int *adjacent_matrix = NULL;
 list<int> *adj = NULL, *rev_adj = NULL; 
 bool *input = NULL, *output = NULL;
-stack<int> Stack; 
+stack<int> topo_Stack; // remember to eliminate PI nodes 
 int *label = NULL;
 
 int main(int argc, char *argv[])
@@ -33,12 +37,17 @@ int main(int argc, char *argv[])
     }
     // Preprocessing
     read_aag(argv[1]);
+    K = stoi(argv[2]);
+    cout << "Input File: " << argv[1] << endl;
+    cout << "K: " << argv[2] << endl;
+    cout << "Output File: " << argv[3] << endl; 
 
     /*
     == Labeling Phase ==
     */
     topologicalSort();
-    BFS(6);
+    labeling();
+    //BFS(6);
 
     /*
     == Mapping Phase ==
@@ -46,12 +55,103 @@ int main(int argc, char *argv[])
 
     // Postprocessing
 
-    
+
     printArray();
+    delete_mem();
 	return 0;
 }
+/*
+void AddEdge(int from, int to, int capacity){
 
-void topologicalSortUtil(int v, bool visited[], stack<int> &Stack) 
+    
+}
+*/
+
+void labeling()
+{
+	int p = 0;
+	// initializing label array to -1, PI to 0
+	for(int i = 0; i < M; i++){
+		if(input[i])
+			label[i] = 0;
+		else
+			label[i] = -1;	
+		cout << label[i] << " ";
+	}
+	cout << endl;
+
+	// by topological order, ommit one node for connecting network
+	// debug :: using node(7) index(6)
+	int current_node = 6;
+	int *pred_ret;
+	pred_ret = BFS(current_node);
+
+	// find p by searching all parent of current node
+	for(int i = 0; i < M; i++){
+		if(pred_ret[i]>=0){
+			p = (p < label[i]) ? label[i] : p;
+		}
+	}
+	
+	// Nt -> Nt' -> Nt''
+	for(int i = 0; i < M; i++){
+		if(p == label[i] && pred_ret[i]>=0)
+			pred_ret[i] = -10;
+	}
+
+	int num_node = 0;
+	bool set = false;
+	for(int i = 0; i < M; i++){
+		if(pred_ret[i] == -10 || pred_ret[i] > 0){
+			if(pred_ret[i] == -10 && set == false){
+				num_node ++;
+				set = true;
+			}
+			else if (pred_ret[i] > 0){
+				num_node ++;
+			}
+		}
+	}
+
+	cout << "num of nodes: "<< num_node << endl;
+	int num_vertex = 2 * (num_node-1) + 2;
+	cout << "num of vertices: "<< num_vertex << endl;
+	std::vector<std::vector<int> > AdjMatrix;
+	AdjMatrix.resize(M);
+    for (int i = 0; i < M; i++)
+        AdjMatrix[i].resize(M);
+
+	// s:0, t(PO): num_vertex -1
+	for (int i = 0; i < num_vertex-1; i++){
+		// start from s to PI with INF
+		if (i == 0){
+			for (int j = 0; j < M; j++){
+				if (input[j])
+					AdjMatrix[i][j] = INF; // from i to j
+			}
+		}
+		else if(i == num_vertex - 2 ){
+			for (int j = 0; j < M; j++){
+				//AddEdge(i, j, INF);
+			}
+		}
+		//AddEdge(i, i + 1, INF);
+	}
+
+	cout << AdjMatrix[0][num_vertex-1] << endl;
+
+
+	// debug print
+	cout << "p: "<< p << endl;
+	for (int j = 0; j < M; j++) {
+        std::cout << pred_ret[j] << " ";
+    }
+    std::cout << std::endl;
+
+
+}
+
+void topologicalSortUtil(int v, bool visited[], stack<int> &topo_Stack) 
 { 
     // Mark the current node as visited. 
     visited[v] = true; 
@@ -60,15 +160,14 @@ void topologicalSortUtil(int v, bool visited[], stack<int> &Stack)
     list<int>::iterator i; 
     for (i = adj[v].begin(); i != adj[v].end(); ++i) 
         if (!visited[*i]) 
-            topologicalSortUtil(*i, visited, Stack); 
+            topologicalSortUtil(*i, visited, topo_Stack); 
   
     // Push current vertex to stack which stores result 
-    Stack.push(v); 
+    topo_Stack.push(v); 
 } 
 
 void topologicalSort() 
-{ 
-  
+{
     // Mark all the vertices as not visited 
     bool *visited = new bool[M]; 
     for (int i = 0; i < M; i++) 
@@ -78,18 +177,18 @@ void topologicalSort()
     // Sort starting from all vertices one by one 
     for (int i = 0; i < M; i++) 
       if (visited[i] == false) 
-        topologicalSortUtil(i, visited, Stack); 
+        topologicalSortUtil(i, visited, topo_Stack); 
   
     // Print contents of stack 
-    while (Stack.empty() == false) 
+    while (topo_Stack.empty() == false) 
     { 
-        cout << Stack.top()+1 << " "; 
-        Stack.pop(); 
+        cout << topo_Stack.top()+1 << " "; 
+        topo_Stack.pop(); 
     } 
     cout << endl;
 } 
 
-void BFS(int Start){
+int* BFS(int Start){
 	int *color,             // 0:白色, 1:灰色, 2:黑色
         *distance,          // 0:起點, 無限大:從起點走不到的vertex
         *predecessor;       // -1:沒有predecessor, 表示為起點vertex
@@ -98,19 +197,19 @@ void BFS(int Start){
     distance = new int[M];
 
     for (int i = 0; i < M; i++) {  // 初始化，如圖二(b)
-        color[i] = 0;                       // 0:白色;
-        predecessor[i] = -1;                // -1表示沒有predecessor
+        color[i] = 0;              // 0:白色;
+        predecessor[i] = -1;       // -1表示沒有predecessor
         distance[i] = M+1;         // M個vertex, 
-    }                                       // 最長距離 distance = M -1條edge
+    }                              // 最長距離 distance = M -1條edge
 
     std::queue<int> q;
     int i = Start;
 
     for (int j = 0; j < M; j++) {  // j從0數到M-1, 因此j會走過graph中所有vertex
-        if (color[i] == 0) {                // 第一次i會是起點vertex, 如圖二(c)
-            color[i] = 1;                   // 1:灰色
-            distance[i] = 0;                // 每一個connected component的起點之距離設成0
-            predecessor[i] = -1;            // 每一個connected component的起點沒有predecessor
+        if (color[i] == 0) {       // 第一次i會是起點vertex, 如圖二(c)
+            color[i] = 1;          // 1:灰色
+            distance[i] = 0;       // 每一個connected component的起點之距離設成0
+            predecessor[i] = -1;    // 每一個connected component的起點沒有predecessor
             q.push(i);
             while (!q.empty()) {
                 int u = q.front();                  // u 為新的搜尋起點
@@ -131,10 +230,18 @@ void BFS(int Start){
         // 就把i另成j, 繼續檢查graph中的其他vertex是否仍是白色, 若是, 重複while loop
         i = j;
     }
+
+    // set the start point to -10
+    predecessor[Start] = -10;
+    
+    return predecessor;
+
+    /*
     for (int j = 0; j < M; j++) {
         std::cout << predecessor[j] << " ";
     }
     std::cout << std::endl;
+	*/
 }
 
 void printArray(){
@@ -225,4 +332,10 @@ void read_aag(const string infile_name)
 		myfile.close();
 	}
 	else cout << "Unable to open file";
+}
+
+void delete_mem(){
+	delete adjacent_matrix;
+	delete input;
+	delete output;
 }
