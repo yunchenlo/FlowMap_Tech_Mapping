@@ -9,22 +9,20 @@
 
 using namespace std;
 
-#define INF 100
+#define INF 10000
 
 // register funtions
 void read_aag(const string infile_name);
 void topologicalSort();
 int* BFS(int Start);
 void labeling();
-void printArray();
 void delete_mem();
 
 // global variable
 int M=0, I=0, O=0, K=0;
-int *adjacent_matrix = NULL;
 list<int> *adj = NULL, *rev_adj = NULL; 
 bool *input = NULL, *output = NULL;
-stack<int> topo_Stack; // remember to eliminate PI nodes 
+stack<int> topo_Stack; 
 int *label = NULL;
 
 int main(int argc, char *argv[])
@@ -47,7 +45,6 @@ int main(int argc, char *argv[])
     */
     topologicalSort();
     labeling();
-    //BFS(6);
 
     /*
     == Mapping Phase ==
@@ -56,16 +53,10 @@ int main(int argc, char *argv[])
     // Postprocessing
 
 
-    printArray();
     delete_mem();
 	return 0;
 }
-/*
-void AddEdge(int from, int to, int capacity){
 
-    
-}
-*/
 
 void labeling()
 {
@@ -82,7 +73,9 @@ void labeling()
 
 	// by topological order, ommit one node for connecting network
 	// debug :: using node(7) index(6)
-	int current_node = 6;
+	label[6] = 1;
+	label[7] = 1;
+	int current_node = 9;
 	int *pred_ret;
 	pred_ret = BFS(current_node);
 
@@ -93,52 +86,108 @@ void labeling()
 		}
 	}
 	
-	// Nt -> Nt' -> Nt''
+	// Nt -> Nt'
 	for(int i = 0; i < M; i++){
 		if(p == label[i] && pred_ret[i]>=0)
 			pred_ret[i] = -10;
 	}
 
-	int num_node = 0;
+	int num_merge = 0;
 	bool set = false;
 	for(int i = 0; i < M; i++){
 		if(pred_ret[i] == -10 || pred_ret[i] > 0){
 			if(pred_ret[i] == -10 && set == false){
-				num_node ++;
+				num_merge ++;
 				set = true;
 			}
 			else if (pred_ret[i] > 0){
-				num_node ++;
+				num_merge ++;
 			}
 		}
 	}
 
-	cout << "num of nodes: "<< num_node << endl;
-	int num_vertex = 2 * (num_node-1) + 2;
-	cout << "num of vertices: "<< num_vertex << endl;
-	std::vector<std::vector<int> > AdjMatrix;
-	AdjMatrix.resize(M);
-    for (int i = 0; i < M; i++)
-        AdjMatrix[i].resize(M);
-
-	// s:0, t(PO): num_vertex -1
-	for (int i = 0; i < num_vertex-1; i++){
-		// start from s to PI with INF
-		if (i == 0){
-			for (int j = 0; j < M; j++){
-				if (input[j])
-					AdjMatrix[i][j] = INF; // from i to j
-			}
+	cout << "num of nodes after merging: "<< num_merge << endl;
+	
+	int *Nt_p = new int[(num_merge + 1)*(num_merge + 1)]; // including s(0)
+	int *Nt_p_index = new int[num_merge + 1];
+	
+	// initialization
+	for(int i = 0; i < num_merge + 1; i++){
+		for(int j = 0; j < num_merge + 1; j++){
+			Nt_p[i*(num_merge+1)+j] = 0;
 		}
-		else if(i == num_vertex - 2 ){
-			for (int j = 0; j < M; j++){
-				//AddEdge(i, j, INF);
-			}
-		}
-		//AddEdge(i, i + 1, INF);
 	}
 
-	cout << AdjMatrix[0][num_vertex-1] << endl;
+	int offset = 1;
+	Nt_p_index[0] = 0; // s
+	// construct index array
+	for(int i = 0 ; i < M; i++){
+		if(pred_ret[i] > 0){
+			Nt_p_index[offset] = i + 1;
+			offset++;
+		}
+		else if(pred_ret[i] == -10 && current_node == i){
+			Nt_p_index[offset] = current_node + 1;
+			offset++;
+		}
+	}
+
+	for(int i = 0; i < num_merge+1; i++){
+		cout << Nt_p_index[i] <<" ";
+	}
+	cout << endl;
+
+	// fill in Nt_p
+	for(int i = 0; i < M; i++){
+		if(pred_ret[i] == -10){ // node's fanin will be assigned to node t
+			for(int j = 0; j < num_merge + 1; j++){
+				if(Nt_p_index[j] == current_node + 1){
+					if(input[i]){
+						cout << i << " " << " zz" << endl;
+						Nt_p[j + (num_merge + 1)*0] = 1;
+					}
+					else{
+						list<int>::iterator k;
+						for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
+							if(pred_ret[*k] != -10){
+								cout << i << " " << *k << " zz" << endl;
+								Nt_p[j + (num_merge + 1)*(*k)] = 1;
+							}
+						}
+					}
+				}
+			}
+		}
+		else if(pred_ret[i] >= 0){ // node's fanin will be 
+			for(int j = 0; j < num_merge + 1; j++){
+				if(Nt_p_index[j] == i + 1){
+					if(input[i]){
+						cout << i << " " << " zz" << endl;
+						Nt_p[j + (num_merge + 1)*0] = 1;
+					}
+					else{
+					list<int>::iterator k;
+						for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
+							if(pred_ret[*k] != -10){
+								cout << i << " " << *k << " zz" << endl;
+								Nt_p[j + (num_merge + 1)*(*k)] = 1;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for(int i = 0; i < num_merge+1; i++){
+		for(int j = 0; j < num_merge+1; j++){
+			cout << Nt_p[i*(num_merge+1)+j] <<" ";
+		}
+		cout << endl;
+	}
+
+	// Nt' -> Nt''
+
 
 
 	// debug print
@@ -147,7 +196,6 @@ void labeling()
         std::cout << pred_ret[j] << " ";
     }
     std::cout << std::endl;
-
 
 }
 
@@ -162,8 +210,10 @@ void topologicalSortUtil(int v, bool visited[], stack<int> &topo_Stack)
         if (!visited[*i]) 
             topologicalSortUtil(*i, visited, topo_Stack); 
   
-    // Push current vertex to stack which stores result 
-    topo_Stack.push(v); 
+    // Push current vertex to stack which stores result (except primary input)
+    
+    if(!input[v])
+	    topo_Stack.push(v); 
 } 
 
 void topologicalSort() 
@@ -244,15 +294,6 @@ int* BFS(int Start){
 	*/
 }
 
-void printArray(){
-	for(int i = 0; i < M; i++){
-    	for(int j = 0; j < M; j++){
-    		cout << adjacent_matrix[i*M + j] << " ";
-    	}
-    	cout << endl;
-    }
-    cout << endl;
-}
 
 void read_aag(const string infile_name)
 {
@@ -279,16 +320,12 @@ void read_aag(const string infile_name)
 		}
 		
 		// malloc adjacent matrix + input table + output table
-		adjacent_matrix = new int[M*M];
 		adj = new list<int>[M];
 		rev_adj = new list<int>[M];
 		input = new bool[M];
 		output = new bool[M];
 		label = new int[M];
 
-		for (int i = 0; i < M*M; i++){
-			adjacent_matrix[i] = 0;
-		}
 		for (int i = 0; i < M; i++){
 			input[i] = false;
 			output[i] = false;
@@ -321,8 +358,6 @@ void read_aag(const string infile_name)
 				}
 				index ++;
 			}
-			adjacent_matrix[temp[0]*M + temp[1]] = 1;
-			adjacent_matrix[temp[0]*M + temp[2]] = 1;
 			adj[temp[1]].push_back(temp[0]);
 			adj[temp[2]].push_back(temp[0]);
 			rev_adj[temp[0]].push_back(temp[1]);
@@ -335,7 +370,6 @@ void read_aag(const string infile_name)
 }
 
 void delete_mem(){
-	delete adjacent_matrix;
 	delete input;
 	delete output;
 }

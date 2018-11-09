@@ -1,5 +1,5 @@
 CPP = g++
-CPPFLAGS = -Wall -g 
+CPPFLAGS = -Wall -g -std=c++11
 OBJS = main.o 
 
 run:FlowMap.exe
