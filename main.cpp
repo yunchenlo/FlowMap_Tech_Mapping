@@ -22,7 +22,7 @@ void delete_mem();
 
 // global variable
 int M=0, I=0, O=0, K=0;
-list<int> *adj = NULL, *rev_adj = NULL; 
+list<int> *adj = NULL, *rev_adj = NULL, *kLUT_list = NULL; 
 bool *input = NULL, *output = NULL;
 stack<int> topo_Stack; 
 int *label = NULL;
@@ -47,6 +47,10 @@ int main(int argc, char *argv[])
     */
     topologicalSort();
     labeling();
+    for(int i = 0; i < M; i++){
+    	cout << label[i] << " ";
+    }
+    cout << endl;
 
     /*
     == Mapping Phase ==
@@ -62,7 +66,6 @@ int main(int argc, char *argv[])
 
 void labeling()
 {
-	int p = 0;
 	// initializing label array to -1, PI to 0
 	for(int i = 0; i < M; i++){
 		if(input[i])
@@ -75,234 +78,307 @@ void labeling()
 
 	// by topological order, ommit one node for connecting network
 	// debug :: using node(7) index(6)
+	/*
 	label[6] = 1;
 	label[7] = 1;
-	int current_node = 9;
-	int *pred_ret;
-	pred_ret = BFS(current_node);
+	label[8] = 1;
+	label[9] = 1;
+	label[11] = 2;*/
+	while (topo_Stack.empty() == false) 
+    { 
+    	cout << "=================" << endl;
+        cout << "current_node" << topo_Stack.top()+1 << " "; 
+        
+	    cout << endl;
+		for(int i = 0; i < M; i++){
+	    	cout << label[i] << " ";
+	    }
+	    cout << endl;
+		
+	    int p = 0;
 
-	// find p by searching all parent of current node
-	for(int i = 0; i < M; i++){
-		if(pred_ret[i]>=0){
-			p = (p < label[i]) ? label[i] : p;
-		}
-	}
-	
-	// Nt -> Nt'
-	for(int i = 0; i < M; i++){
-		if(p == label[i] && pred_ret[i]>=0)
-			pred_ret[i] = -10;
-	}
+		int current_node = topo_Stack.top();
+		int *pred_ret;
+		pred_ret = BFS(current_node);
 
-	int num_merge = 0;
-	bool set = false;
-	for(int i = 0; i < M; i++){
-		if(pred_ret[i] == -10 || pred_ret[i] > 0){
-			if(pred_ret[i] == -10 && set == false){
-				num_merge ++;
-				set = true;
-			}
-			else if (pred_ret[i] > 0){
-				num_merge ++;
+		// find p by searching all parent of current node
+		for(int i = 0; i < M; i++){
+			if(pred_ret[i]>=0){
+				p = (p < label[i]) ? label[i] : p;
 			}
 		}
-	}
-
-	cout << "num of nodes after merging: "<< num_merge << endl;
-	
-	int *Nt_p = new int[(num_merge + 1)*(num_merge + 1)]; // including s(0)
-	int *Nt_p_index = new int[num_merge + 1];
-	
-	// initialization
-	for(int i = 0; i < num_merge + 1; i++){
-		for(int j = 0; j < num_merge + 1; j++){
-			Nt_p[i*(num_merge+1)+j] = 0;
+		cout << "p:" << p << endl;
+		cout << endl;
+		for(int i = 0; i < M; i++){
+				cout << pred_ret[i] << " " ;
 		}
-	}
-
-	int offset = 1;
-	Nt_p_index[0] = 0; // s
-	// construct index array
-	for(int i = 0 ; i < M; i++){
-		if(pred_ret[i] > 0){
-			Nt_p_index[offset] = i + 1;
-			offset++;
+		cout << endl;
+		// Nt -> Nt'
+		for(int i = 0; i < M; i++){
+			if(p == label[i] && pred_ret[i]>=0)
+				pred_ret[i] = -10;
 		}
-		else if(pred_ret[i] == -10 && current_node == i){
-			Nt_p_index[offset] = current_node + 1;
-			offset++;
+		cout << "=======" << endl ;
+		for(int i = 0; i < M; i++){
+				cout << label[i] << " " ;
 		}
-	}
+		cout << endl;
+		for(int i = 0; i < M; i++){
+				cout << pred_ret[i] << " " ;
+		}
+		cout << endl;
 
-	cout << "[ ";
-	for(int i = 0; i < num_merge+1; i++){
-		cout << Nt_p_index[i] <<" ";
-	}
-	cout << "]" << endl;
+		int num_merge = 0;
+		bool set = false;
+		for(int i = 0; i < M; i++){
+			if(pred_ret[i] == -10 || pred_ret[i] > 0){
+				if(pred_ret[i] == -10 && set == false){
+					num_merge ++;
+					set = true;
+				}
+				else if (pred_ret[i] > 0){
+					num_merge ++;
+				}
+			}
+		}
 
-	// fill in Nt_p
-	for(int i = 0; i < M; i++){
-		if(pred_ret[i] == -10){ // node's fanin will be assigned to node t
-			for(int j = 0; j < num_merge + 1; j++){
-				if(Nt_p_index[j] == current_node + 1){
-					if(input[i]){
-						//cout << i << " " << " zz" << endl;
-						Nt_p[j + (num_merge + 1)*0] = 1;
+		cout << "num of nodes after merging: "<< num_merge << endl;
+		
+		int num_Ntp_node = num_merge + 1;
+		int *Nt_p = new int[num_Ntp_node*num_Ntp_node]; // including s(0)
+		int *Nt_p_index = new int[num_Ntp_node];
+		
+		// initialization
+		for(int i = 0; i < num_Ntp_node; i++){
+			for(int j = 0; j < num_Ntp_node; j++){
+				Nt_p[i*num_Ntp_node+j] = 0;
+			}
+		}
+
+		int offset = 1;
+		Nt_p_index[0] = 0; // s
+		// construct index array
+		for(int i = 0 ; i < M; i++){
+			if(pred_ret[i] >= 0){
+				Nt_p_index[offset] = i + 1;
+				offset++;
+			}
+			else if(pred_ret[i] == -10 && current_node == i){
+				Nt_p_index[offset] = current_node + 1;
+				offset++;
+			}
+		}
+
+		cout << "[ ";
+		for(int i = 0; i < num_Ntp_node; i++){
+			cout << Nt_p_index[i] <<" ";
+		}
+		cout << "]" << endl;
+
+		// fill in Nt_p
+		for(int i = 0; i < M; i++){
+			if(pred_ret[i] == -10){ // node's fanin will be assigned to node t'
+				for(int j = 0; j < num_Ntp_node; j++){
+					if(Nt_p_index[j] == current_node + 1){
+						if(input[i]){
+							//cout << i << " " << " zz" << endl;
+							Nt_p[j + num_Ntp_node*0] = 1; // s to Nt_p
+						}
+						else{
+							list<int>::iterator k;
+							for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
+								if(pred_ret[*k] != -10){
+									for(int l = 0; l < num_Ntp_node; l++){
+										if(Nt_p_index[l] == *k + 1){
+											cout << i << " " << l << " zz" << endl;
+											Nt_p[j + num_Ntp_node*(l)] = 1;
+										}
+									}
+								}
+							}
+						}
 					}
-					else{
-						list<int>::iterator k;
-						for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
-							if(pred_ret[*k] != -10){
-								//cout << i << " " << *k << " zz" << endl;
-								Nt_p[j + (num_merge + 1)*(*k)] = 1;
+				}
+			}
+			else if(pred_ret[i] >= 0){ // node's fanin will be 
+				for(int j = 0; j < num_Ntp_node; j++){
+					if(Nt_p_index[j] == i + 1){
+						if(input[i]){
+							cout << i+1 << " " << j << " " << endl;
+							Nt_p[j + num_Ntp_node*0] = 1;
+						}
+						else{
+							list<int>::iterator k;
+							for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
+								if(pred_ret[*k] != -10){
+									for(int l = 0; l < num_Ntp_node; l++){
+										if(Nt_p_index[l] == *k + 1){
+											//cout << i << " " << l << " zz" << endl;
+											Nt_p[j + num_Ntp_node*(l)] = 1;
+										}
+									}
+									//cout << i << " " << *k << " zz" << endl;
+									//Nt_p[j + num_Ntp_node*(*k)] = 1;
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-		else if(pred_ret[i] >= 0){ // node's fanin will be 
-			for(int j = 0; j < num_merge + 1; j++){
-				if(Nt_p_index[j] == i + 1){
-					if(input[i]){
-						//cout << i << " " << " zz" << endl;
-						Nt_p[j + (num_merge + 1)*0] = 1;
-					}
-					else{
-					list<int>::iterator k;
-						for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
-							if(pred_ret[*k] != -10){
-								//cout << i << " " << *k << " zz" << endl;
-								Nt_p[j + (num_merge + 1)*(*k)] = 1;
-							}
-						}
-					}
-				}
+
+		for(int i = 0; i < num_merge+1; i++){
+			for(int j = 0; j < num_merge+1; j++){
+				cout << Nt_p[i*(num_merge+1)+j] <<" ";
+			}
+			cout << endl;
+		}
+
+		// Nt' -> Nt''
+		int num_mid = num_merge -1;
+		int Nt_pp_num_node = 2 * num_mid + 2;
+		int *Nt_pp = new int[Nt_pp_num_node*Nt_pp_num_node]; // including s(0)
+		int *Nt_pp_index = new int[Nt_pp_num_node];
+		Graph_FlowNetWorks g11(Nt_pp_num_node);
+
+		for(int i = 0; i < Nt_pp_num_node; i++){
+			for(int j = 0; j < Nt_pp_num_node; j++){
+				Nt_pp[i*Nt_pp_num_node+j] = 0;
 			}
 		}
-	}
 
-	for(int i = 0; i < num_merge+1; i++){
+		offset = 1;
+		Nt_pp_index[0] = 0; // s(PI)
+		Nt_pp_index[Nt_pp_num_node-1] = current_node + 1; // PO
+		
+		// construct index array
+		for(int i = 0 ; i < (Nt_pp_num_node)/2-1; i++){
+			Nt_pp_index[2*offset-1] = Nt_p_index[offset];
+			Nt_pp_index[2*offset] = -Nt_p_index[offset];
+			offset++;
+		}
+
+		cout << "[ ";
+		for(int i = 0 ; i < Nt_pp_num_node; i++){
+			cout << Nt_pp_index[i] << " "; 
+		}
+		cout << "]" << endl;
+
+
+		// fill in Nt_pp
+		// mid node decompose
+		for(int i = 1; i < Nt_pp_num_node-1; i = i+2){
+			g11.AddEdge(i, i+1, 1);
+			Nt_pp[i*Nt_pp_num_node+(i+1)] = 1;
+		}
+		// for PI(s)
 		for(int j = 0; j < num_merge+1; j++){
-			cout << Nt_p[i*(num_merge+1)+j] <<" ";
-		}
-		cout << endl;
-	}
-
-	// Nt' -> Nt''
-	int num_mid = num_merge -1;
-	int Nt_pp_num_node = 2 * num_mid + 2;
-	int *Nt_pp = new int[Nt_pp_num_node*Nt_pp_num_node]; // including s(0)
-	int *Nt_pp_index = new int[Nt_pp_num_node];
-	Graph_FlowNetWorks g11(Nt_pp_num_node);
-
-	for(int i = 0; i < Nt_pp_num_node; i++){
-		for(int j = 0; j < Nt_pp_num_node; j++){
-			Nt_pp[i*Nt_pp_num_node+j] = 0;
-		}
-	}
-
-	offset = 1;
-	Nt_pp_index[0] = 0; // s(PI)
-	Nt_pp_index[Nt_pp_num_node-1] = current_node + 1; // PO
-	
-	// construct index array
-	for(int i = 0 ; i < (Nt_pp_num_node)/2-1; i++){
-		Nt_pp_index[2*offset-1] = Nt_p_index[offset];
-		Nt_pp_index[2*offset] = -Nt_p_index[offset];
-		offset++;
-	}
-
-	cout << "[ ";
-	for(int i = 0 ; i < Nt_pp_num_node; i++){
-		cout << Nt_pp_index[i] << " "; 
-	}
-	cout << "]" << endl;
-
-	// fill in Nt_pp
-	// mid node decompose
-	for(int i = 1; i < Nt_pp_num_node-1; i = i+2){
-		g11.AddEdge(i, i+1, 1);
-		Nt_pp[i*Nt_pp_num_node+(i+1)] = 1;
-	}
-
-	// for PI(s)
-	for(int j = 0; j < num_merge+1; j++){
-		if(Nt_p[0*(num_merge+1)+j]){
-			g11.AddEdge(0, 2*j-1, INF);
-			Nt_pp[0*Nt_pp_num_node+(2*j-1)] = INF;
-		}
-	}
-
-	// for PO
-	for(int i = 0; i < num_merge+1; i++){
-		if(Nt_p[i*(num_merge+1)+(num_merge)]){
-			g11.AddEdge(2*i, Nt_pp_num_node-1, INF);
-			Nt_pp[(2*i)*Nt_pp_num_node+Nt_pp_num_node-1] = INF;
-		}
-	}
-	// for mid node
-	for(int i = 1; i < num_merge; i++){
-		for(int j = 1; j < num_merge; j++){
-			if(Nt_p[i*(num_merge+1)+j]){
-				g11.AddEdge(2*i, 2*j-1, INF);
-				Nt_pp[(2*i)*Nt_pp_num_node+(2*j-1)] = INF;
+			if(Nt_p[0*(num_merge+1)+j]){
+				g11.AddEdge(0, 2*j-1, INF);
+				Nt_pp[0*Nt_pp_num_node+(2*j-1)] = INF;
 			}
 		}
-	}
-
-	for(int i = 0; i < Nt_pp_num_node; i++){
-		for(int j = 0; j < Nt_pp_num_node; j++){
-			cout << Nt_pp[i*Nt_pp_num_node+j] <<" ";
+		// for PO
+		for(int i = 0; i < num_merge+1; i++){
+			if(Nt_p[i*(num_merge+1)+(num_merge)]){
+				g11.AddEdge(2*i, Nt_pp_num_node-1, INF);
+				Nt_pp[(2*i)*Nt_pp_num_node+Nt_pp_num_node-1] = INF;
+			}
 		}
-		cout << endl;
-	}
+		// for mid node
+		for(int i = 1; i < num_merge; i++){
+			for(int j = 1; j < num_merge; j++){
+				if(Nt_p[i*(num_merge+1)+j]){
+					g11.AddEdge(2*i, 2*j-1, INF);
+					Nt_pp[(2*i)*Nt_pp_num_node+(2*j-1)] = INF;
+				}
+			}
+		}
 
-	std::vector<std::vector<int>> Res_ret;
-    Res_ret = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
-    
-    for(int i = 0; i < Nt_pp_num_node; i++){
-        for(int j = 0; j < Nt_pp_num_node; j++){
-            if(j <= i)
-            	Res_ret[i][j] = 0;
-        }
-    }
-    for(int i = 0; i < Nt_pp_num_node; i++){
-        for(int j = 0; j < Nt_pp_num_node; j++){
-            if(j <= i)
-            	Res_ret[i][j] = Res_ret[j][i];
-        }
-    }
-    for(int i = 0; i < Nt_pp_num_node; i++){
-        for(int j = 0; j < Nt_pp_num_node; j++){
-            if(j > i)
-            	Res_ret[i][j] = 0;
-        }
-    }
+		for(int i = 0; i < Nt_pp_num_node; i++){
+			for(int j = 0; j < Nt_pp_num_node; j++){
+				cout << Nt_pp[i*Nt_pp_num_node+j] <<" ";
+			}
+			cout << endl;
+		}
 
-    cout << "final ad matrix: " << endl;
-    for(int i = 0; i < Nt_pp_num_node; i++){
-        for(int j = 0; j < Nt_pp_num_node; j++){
-            std::cout << Res_ret[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
-    
-    std::vector<bool> visited;
-    visited = g11.BFS(Res_ret, Nt_pp_num_node-1);
+		std::vector<std::vector<int>> Res_ret;
+	    Res_ret = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
+	    
+	    for(int i = 0; i < Nt_pp_num_node; i++){
+	        for(int j = 0; j < Nt_pp_num_node; j++){
+	            if(j <= i)
+	            	Res_ret[i][j] = 0;
+	        }
+	    }
+	    for(int i = 0; i < Nt_pp_num_node; i++){
+	        for(int j = 0; j < Nt_pp_num_node; j++){
+	            if(j <= i)
+	            	Res_ret[i][j] = Res_ret[j][i];
+	        }
+	    }
+	    for(int i = 0; i < Nt_pp_num_node; i++){
+	        for(int j = 0; j < Nt_pp_num_node; j++){
+	            if(j > i)
+	            	Res_ret[i][j] = 0;
+	        }
+	    }
 
-    for(int i = 0; i < Nt_pp_num_node; i++){
-    	std::cout << visited[i] << " ";
-    }
-    std::cout << std::endl;
+	    cout << "final ad matrix: " << endl;
+	    for(int i = 0; i < Nt_pp_num_node; i++){
+	        for(int j = 0; j < Nt_pp_num_node; j++){
+	            std::cout << Res_ret[i][j] << " ";
+	        }
+	        std::cout << std::endl;
+	    }
+	    
+	    std::vector<bool> visited_BFS;
+	    visited_BFS = g11.BFS(Res_ret, Nt_pp_num_node-1);
 
-	// debug print
-	cout << "p: "<< p << endl;
-	for (int j = 0; j < M; j++) {
-        std::cout << pred_ret[j] << " ";
-    }
-    std::cout << std::endl;
-    
+	    for(int i = 0; i < Nt_pp_num_node; i++){
+	    	std::cout << visited_BFS[i] << " ";
+	    }
+	    std::cout << std::endl;
+
+	    cout << "returned maxflow:" << g11.get_maxflow() << endl;
+	    if (g11.get_maxflow() > K)
+	    	label[current_node] = p + 1;
+	    else
+	    	label[current_node] = p;
+
+	    cout << "current node label:" << label[current_node] << endl;
+
+	    for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
+	    	if(visited_BFS[i]){
+	    		cout << i << " ";
+	    		kLUT_list[current_node+1].push_back(Nt_pp_index[i]);
+	    	}
+	    }
+	    cout << endl;
+
+	    for (int i = 1; i < M; i++ ){
+	    	if(pred_ret[i] == -10){
+	    		kLUT_list[current_node+1].push_back(i+1);
+	    	}
+	    }
+	    
+
+	    cout << "kLutlist[" << current_node+1 << "]\n";
+	    for (std::list<int>::iterator itr = kLUT_list[current_node+1].begin();        // for loop 太長
+	                     itr != kLUT_list[current_node+1].end(); itr++) {
+	    	cout << *itr << " ";
+	    }
+	    cout << endl;
+		
+
+		// debug print
+		cout << "p: "<< p << endl;
+		for (int j = 0; j < M; j++) {
+	        std::cout << pred_ret[j] << " ";
+	    }
+	    std::cout << std::endl;
+    	topo_Stack.pop(); 
+    } 
 
 }
 
@@ -336,13 +412,14 @@ void topologicalSort()
       if (visited[i] == false) 
         topologicalSortUtil(i, visited, topo_Stack); 
   
+  	/*
     // Print contents of stack 
     while (topo_Stack.empty() == false) 
     { 
         cout << topo_Stack.top()+1 << " "; 
         topo_Stack.pop(); 
     } 
-    cout << endl;
+    cout << endl;*/
 } 
 
 int* BFS(int Start){
@@ -392,13 +469,6 @@ int* BFS(int Start){
     predecessor[Start] = -10;
     
     return predecessor;
-
-    /*
-    for (int j = 0; j < M; j++) {
-        std::cout << predecessor[j] << " ";
-    }
-    std::cout << std::endl;
-	*/
 }
 
 
@@ -429,6 +499,7 @@ void read_aag(const string infile_name)
 		// malloc adjacent matrix + input table + output table
 		adj = new list<int>[M];
 		rev_adj = new list<int>[M];
+		kLUT_list = new list<int>[M+1];
 		input = new bool[M];
 		output = new bool[M];
 		label = new int[M];

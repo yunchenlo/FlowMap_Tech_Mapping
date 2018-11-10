@@ -1,5 +1,5 @@
 CPP = g++
-CPPFLAGS = -Wall -g -std=c++11
+CPPFLAGS = -Wall -g -std=c++11 -O0
 OBJS = main.o Graph_FlowNetWorks.o
 DEPS = Graph_FlowNetWorks.cpp
 

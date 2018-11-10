@@ -27,11 +27,6 @@ std::vector<bool> Graph_FlowNetWorks::BFS(std::vector<std::vector<int> > matrix,
             }
         }
     }
-    for(int i = 0; i < matrix.size(); i++){
-        std::cout << visited[i] << " ";
-    }
-    std::cout << std::endl; 
-
     return visited;
 }
 
@@ -81,14 +76,9 @@ std::vector<std::vector<int>> Graph_FlowNetWorks::FordFulkerson(int source, int 
 
     // residual networks的初始狀態等於AdjMatrix, 見圖五(a)
     std::vector<std::vector<int>> graphResidual(AdjMatrix);    
-    int maxflow = 0;                                           
+                                              
     int predecessor[num_vertex];
-    for(int i = 0; i < num_vertex; i++){
-        for(int j = 0; j < num_vertex; j++){
-            std::cout << AdjMatrix[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
+
     // BFS finds augmenting path,
     while (BFSfindExistingPath(graphResidual, predecessor, source, termination)) {
         int mincapacity = MinCapacity(graphResidual, predecessor, termination);
@@ -100,7 +90,7 @@ std::vector<std::vector<int>> Graph_FlowNetWorks::FordFulkerson(int source, int 
             graphResidual[Y][X] += mincapacity;
         }
     }
-    
+
     std::cout << "Possible Maximum Flow: " << maxflow << std::endl;
     return graphResidual;
 }
