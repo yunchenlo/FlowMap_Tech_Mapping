@@ -7,6 +7,8 @@
 #include <stack>
 #include <queue>
 
+#include "Graph_FlowNetWorks.h"
+
 using namespace std;
 
 #define INF 10000
@@ -192,6 +194,7 @@ void labeling()
 	int Nt_pp_num_node = 2 * num_mid + 2;
 	int *Nt_pp = new int[Nt_pp_num_node*Nt_pp_num_node]; // including s(0)
 	int *Nt_pp_index = new int[Nt_pp_num_node];
+	Graph_FlowNetWorks g11(Nt_pp_num_node);
 
 	for(int i = 0; i < Nt_pp_num_node; i++){
 		for(int j = 0; j < Nt_pp_num_node; j++){
@@ -219,25 +222,32 @@ void labeling()
 	// fill in Nt_pp
 	// mid node decompose
 	for(int i = 1; i < Nt_pp_num_node-1; i = i+2){
+		g11.AddEdge(i, i+1, 1);
 		Nt_pp[i*Nt_pp_num_node+(i+1)] = 1;
 	}
 
 	// for PI(s)
 	for(int j = 0; j < num_merge+1; j++){
-		if(Nt_p[0*(num_merge+1)+j])
+		if(Nt_p[0*(num_merge+1)+j]){
+			g11.AddEdge(0, 2*j-1, INF);
 			Nt_pp[0*Nt_pp_num_node+(2*j-1)] = INF;
+		}
 	}
 
 	// for PO
 	for(int i = 0; i < num_merge+1; i++){
-		if(Nt_p[i*(num_merge+1)+(num_merge)])
-			Nt_pp[(2*i-1)*Nt_pp_num_node+Nt_pp_num_node-1] = INF;
+		if(Nt_p[i*(num_merge+1)+(num_merge)]){
+			g11.AddEdge(2*i, Nt_pp_num_node-1, INF);
+			Nt_pp[(2*i)*Nt_pp_num_node+Nt_pp_num_node-1] = INF;
+		}
 	}
 	// for mid node
 	for(int i = 1; i < num_merge; i++){
 		for(int j = 1; j < num_merge; j++){
-			if(Nt_p[i*(num_merge+1)+j])
+			if(Nt_p[i*(num_merge+1)+j]){
+				g11.AddEdge(2*i, 2*j-1, INF);
 				Nt_pp[(2*i)*Nt_pp_num_node+(2*j-1)] = INF;
+			}
 		}
 	}
 
@@ -248,7 +258,43 @@ void labeling()
 		cout << endl;
 	}
 
+	std::vector<std::vector<int>> Res_ret;
+    Res_ret = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
+    
+    for(int i = 0; i < Nt_pp_num_node; i++){
+        for(int j = 0; j < Nt_pp_num_node; j++){
+            if(j <= i)
+            	Res_ret[i][j] = 0;
+        }
+    }
+    for(int i = 0; i < Nt_pp_num_node; i++){
+        for(int j = 0; j < Nt_pp_num_node; j++){
+            if(j <= i)
+            	Res_ret[i][j] = Res_ret[j][i];
+        }
+    }
+    for(int i = 0; i < Nt_pp_num_node; i++){
+        for(int j = 0; j < Nt_pp_num_node; j++){
+            if(j > i)
+            	Res_ret[i][j] = 0;
+        }
+    }
 
+    cout << "final ad matrix: " << endl;
+    for(int i = 0; i < Nt_pp_num_node; i++){
+        for(int j = 0; j < Nt_pp_num_node; j++){
+            std::cout << Res_ret[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+    
+    std::vector<bool> visited;
+    visited = g11.BFS(Res_ret, Nt_pp_num_node-1);
+
+    for(int i = 0; i < Nt_pp_num_node; i++){
+    	std::cout << visited[i] << " ";
+    }
+    std::cout << std::endl;
 
 	// debug print
 	cout << "p: "<< p << endl;
@@ -256,6 +302,7 @@ void labeling()
         std::cout << pred_ret[j] << " ";
     }
     std::cout << std::endl;
+    
 
 }
 

@@ -1,12 +1,13 @@
 CPP = g++
 CPPFLAGS = -Wall -g -std=c++11
-OBJS = main.o 
+OBJS = main.o Graph_FlowNetWorks.o
+DEPS = Graph_FlowNetWorks.cpp
 
 run:FlowMap.exe
 	./FlowMap.exe my_alu.aag 3 output.aag
 
 FlowMap.exe:${OBJS}
-	${CPP} ${CPPFLAGS} -o $@ ${OBJS} 
+	${CPP} ${CPPFLAGS} -o $@ ${OBJS}
 
 %o.: %.cpp ${DEPS}
 	${CPP} -c -o $@ $< ${CPPFLAGS}
