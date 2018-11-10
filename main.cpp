@@ -19,6 +19,8 @@ void topologicalSort();
 int* BFS(int Start);
 void labeling();
 void delete_mem();
+void printLabel();
+void mapping(const string outfile_name);
 
 // global variable
 int M=0, I=0, O=0, K=0;
@@ -26,6 +28,7 @@ list<int> *adj = NULL, *rev_adj = NULL, *kLUT_list = NULL;
 bool *input = NULL, *output = NULL;
 stack<int> topo_Stack; 
 int *label = NULL;
+
 
 int main(int argc, char *argv[])
 {
@@ -46,23 +49,112 @@ int main(int argc, char *argv[])
     == Labeling Phase ==
     */
     topologicalSort();
+
     labeling();
-    for(int i = 0; i < M; i++){
-    	cout << label[i] << " ";
-    }
-    cout << endl;
+
+    printLabel();
 
     /*
     == Mapping Phase ==
     */
+    mapping(argv[3]);
+
+
 
     // Postprocessing
-
-
     delete_mem();
 	return 0;
 }
 
+void mapping(const string outfile_name)
+{
+	vector<int> visited(0,0);
+	std::queue<int> map_q;
+	for(int i = 0; i < M; i++){
+		if(output[i]){
+			map_q.push(i+1);
+			visited.push_back(i+1);
+		}
+	}
+
+	while (map_q.empty() == false) 
+    { 
+    	int ID = map_q.front(); map_q.pop();
+    	if( find(visited.begin(), visited.end(), ID)==visited.end() ) 
+      		visited.push_back(ID);
+
+      	for (list<int>::iterator itr = kLUT_list[ID].begin(); itr != kLUT_list[ID].end(); itr++) {
+			int lut_node = *itr;
+			//cout << "lut: " << lut_node;
+			for(list<int>::iterator k = rev_adj[lut_node-1].begin(); k != rev_adj[lut_node-1].end(); k++){
+    			int fanin_node = *k + 1;
+    			//cout << fanin_node << endl;
+
+    			bool OK = true;
+    			for (list<int>::iterator itr1 = kLUT_list[ID].begin(); itr1 != kLUT_list[ID].end(); itr1++) {
+    				if(*itr1 == fanin_node)
+    					OK = false;
+    			}
+
+    			if(OK && find(visited.begin(), visited.end(), fanin_node) == visited.end() && !input[fanin_node-1]) // check for duplication & node in LUT list
+    				map_q.push(fanin_node);
+    		}
+    	}
+    }
+
+    cout << endl << visited.size() << endl;
+    for (auto i: visited)
+  		std::cout << i << ' ';
+
+  	vector<vector<int> > result;
+  	result.resize(visited.size());
+
+  	for(int i=0; i<visited.size(); i++){
+  		int ID = visited[i];
+
+  		for (list<int>::iterator itr = kLUT_list[ID].begin(); itr != kLUT_list[ID].end(); itr++) {
+			int lut_node = *itr;
+			//cout << "lut: " << lut_node;
+			for(list<int>::iterator k = rev_adj[lut_node-1].begin(); k != rev_adj[lut_node-1].end(); k++){
+    			int fanin_node = *k + 1;
+    			//cout << fanin_node << endl;
+
+    			bool OK = true;
+    			for (list<int>::iterator itr1 = kLUT_list[ID].begin(); itr1 != kLUT_list[ID].end(); itr1++) {
+    				if(*itr1 == fanin_node)
+    					OK = false;
+    			}
+    			if(OK && find(result[i].begin(), result[i].end(), fanin_node)==result[i].end()){ // check for duplication & node in LUT list
+    				//cout << "OK" << endl;
+    				result[i].push_back(fanin_node);
+    			}
+    		}
+    	}
+    	result[i].push_back(ID);
+  	}
+	
+    cout << "result size " << result.size() << endl;
+	
+    // write to output file
+    
+    ofstream fp; 
+  	fp.open(outfile_name.c_str());
+	for(int i=0; i<result.size(); i++)
+  	{
+    	for(int j=result[i].size()-1; j>=0; j--)
+      		fp << result[i][j] << " ";
+    	fp << endl;
+  	}
+  	fp.close();
+}
+
+void printLabel(){
+	cout << "final labels:" << endl;
+    for(int i = 0; i < M; i++){
+    	cout << label[i] << " ";
+    }
+    cout << endl;
+}
 
 void labeling()
 {
@@ -72,9 +164,9 @@ void labeling()
 			label[i] = 0;
 		else
 			label[i] = -1;	
-		cout << label[i] << " ";
+		//cout << label[i] << " ";
 	}
-	cout << endl;
+	//cout << endl;
 
 	// by topological order, ommit one node for connecting network
 	// debug :: using node(7) index(6)
@@ -86,6 +178,7 @@ void labeling()
 	label[11] = 2;*/
 	while (topo_Stack.empty() == false) 
     { 
+    	/*
     	cout << "=================" << endl;
         cout << "current_node" << topo_Stack.top()+1 << " "; 
         
@@ -93,7 +186,7 @@ void labeling()
 		for(int i = 0; i < M; i++){
 	    	cout << label[i] << " ";
 	    }
-	    cout << endl;
+	    cout << endl;*/
 		
 	    int p = 0;
 
@@ -107,17 +200,20 @@ void labeling()
 				p = (p < label[i]) ? label[i] : p;
 			}
 		}
+		/*
 		cout << "p:" << p << endl;
 		cout << endl;
 		for(int i = 0; i < M; i++){
 				cout << pred_ret[i] << " " ;
 		}
 		cout << endl;
+		*/
 		// Nt -> Nt'
 		for(int i = 0; i < M; i++){
 			if(p == label[i] && pred_ret[i]>=0)
 				pred_ret[i] = -10;
 		}
+		/*
 		cout << "=======" << endl ;
 		for(int i = 0; i < M; i++){
 				cout << label[i] << " " ;
@@ -126,7 +222,7 @@ void labeling()
 		for(int i = 0; i < M; i++){
 				cout << pred_ret[i] << " " ;
 		}
-		cout << endl;
+		cout << endl;*/
 
 		int num_merge = 0;
 		bool set = false;
@@ -142,7 +238,7 @@ void labeling()
 			}
 		}
 
-		cout << "num of nodes after merging: "<< num_merge << endl;
+		//cout << "num of nodes after merging: "<< num_merge << endl;
 		
 		int num_Ntp_node = num_merge + 1;
 		int *Nt_p = new int[num_Ntp_node*num_Ntp_node]; // including s(0)
@@ -168,12 +264,12 @@ void labeling()
 				offset++;
 			}
 		}
-
+		/*
 		cout << "[ ";
 		for(int i = 0; i < num_Ntp_node; i++){
 			cout << Nt_p_index[i] <<" ";
 		}
-		cout << "]" << endl;
+		cout << "]" << endl;*/
 
 		// fill in Nt_p
 		for(int i = 0; i < M; i++){
@@ -181,7 +277,6 @@ void labeling()
 				for(int j = 0; j < num_Ntp_node; j++){
 					if(Nt_p_index[j] == current_node + 1){
 						if(input[i]){
-							//cout << i << " " << " zz" << endl;
 							Nt_p[j + num_Ntp_node*0] = 1; // s to Nt_p
 						}
 						else{
@@ -190,7 +285,6 @@ void labeling()
 								if(pred_ret[*k] != -10){
 									for(int l = 0; l < num_Ntp_node; l++){
 										if(Nt_p_index[l] == *k + 1){
-											cout << i << " " << l << " zz" << endl;
 											Nt_p[j + num_Ntp_node*(l)] = 1;
 										}
 									}
@@ -204,7 +298,6 @@ void labeling()
 				for(int j = 0; j < num_Ntp_node; j++){
 					if(Nt_p_index[j] == i + 1){
 						if(input[i]){
-							cout << i+1 << " " << j << " " << endl;
 							Nt_p[j + num_Ntp_node*0] = 1;
 						}
 						else{
@@ -213,12 +306,9 @@ void labeling()
 								if(pred_ret[*k] != -10){
 									for(int l = 0; l < num_Ntp_node; l++){
 										if(Nt_p_index[l] == *k + 1){
-											//cout << i << " " << l << " zz" << endl;
 											Nt_p[j + num_Ntp_node*(l)] = 1;
 										}
 									}
-									//cout << i << " " << *k << " zz" << endl;
-									//Nt_p[j + num_Ntp_node*(*k)] = 1;
 								}
 							}
 						}
@@ -227,12 +317,13 @@ void labeling()
 			}
 		}
 
+		/*
 		for(int i = 0; i < num_merge+1; i++){
 			for(int j = 0; j < num_merge+1; j++){
 				cout << Nt_p[i*(num_merge+1)+j] <<" ";
 			}
 			cout << endl;
-		}
+		}*/
 
 		// Nt' -> Nt''
 		int num_mid = num_merge -1;
@@ -258,12 +349,13 @@ void labeling()
 			offset++;
 		}
 
+		/*
 		cout << "[ ";
 		for(int i = 0 ; i < Nt_pp_num_node; i++){
 			cout << Nt_pp_index[i] << " "; 
 		}
 		cout << "]" << endl;
-
+		*/
 
 		// fill in Nt_pp
 		// mid node decompose
@@ -294,13 +386,13 @@ void labeling()
 				}
 			}
 		}
-
+		/*
 		for(int i = 0; i < Nt_pp_num_node; i++){
 			for(int j = 0; j < Nt_pp_num_node; j++){
 				cout << Nt_pp[i*Nt_pp_num_node+j] <<" ";
 			}
 			cout << endl;
-		}
+		}*/
 
 		std::vector<std::vector<int>> Res_ret;
 	    Res_ret = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
@@ -323,38 +415,38 @@ void labeling()
 	            	Res_ret[i][j] = 0;
 	        }
 	    }
-
+	    /*
 	    cout << "final ad matrix: " << endl;
 	    for(int i = 0; i < Nt_pp_num_node; i++){
 	        for(int j = 0; j < Nt_pp_num_node; j++){
 	            std::cout << Res_ret[i][j] << " ";
 	        }
 	        std::cout << std::endl;
-	    }
+	    }*/
 	    
 	    std::vector<bool> visited_BFS;
 	    visited_BFS = g11.BFS(Res_ret, Nt_pp_num_node-1);
-
+	    /*
 	    for(int i = 0; i < Nt_pp_num_node; i++){
 	    	std::cout << visited_BFS[i] << " ";
 	    }
 	    std::cout << std::endl;
 
-	    cout << "returned maxflow:" << g11.get_maxflow() << endl;
+	    cout << "returned maxflow:" << g11.get_maxflow() << endl;*/
 	    if (g11.get_maxflow() > K)
 	    	label[current_node] = p + 1;
 	    else
 	    	label[current_node] = p;
 
-	    cout << "current node label:" << label[current_node] << endl;
+	    //cout << "current node label:" << label[current_node] << endl;
 
 	    for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
 	    	if(visited_BFS[i]){
-	    		cout << i << " ";
+	    		//cout << i << " ";
 	    		kLUT_list[current_node+1].push_back(Nt_pp_index[i]);
 	    	}
 	    }
-	    cout << endl;
+	    //cout << endl;
 
 	    for (int i = 1; i < M; i++ ){
 	    	if(pred_ret[i] == -10){
@@ -362,21 +454,20 @@ void labeling()
 	    	}
 	    }
 	    
-
+	    /*
 	    cout << "kLutlist[" << current_node+1 << "]\n";
 	    for (std::list<int>::iterator itr = kLUT_list[current_node+1].begin();        // for loop 太長
 	                     itr != kLUT_list[current_node+1].end(); itr++) {
 	    	cout << *itr << " ";
 	    }
 	    cout << endl;
-		
 
 		// debug print
 		cout << "p: "<< p << endl;
 		for (int j = 0; j < M; j++) {
 	        std::cout << pred_ret[j] << " ";
 	    }
-	    std::cout << std::endl;
+	    std::cout << std::endl;*/
     	topo_Stack.pop(); 
     } 
 
@@ -411,15 +502,7 @@ void topologicalSort()
     for (int i = 0; i < M; i++) 
       if (visited[i] == false) 
         topologicalSortUtil(i, visited, topo_Stack); 
-  
-  	/*
-    // Print contents of stack 
-    while (topo_Stack.empty() == false) 
-    { 
-        cout << topo_Stack.top()+1 << " "; 
-        topo_Stack.pop(); 
-    } 
-    cout << endl;*/
+
 } 
 
 int* BFS(int Start){
