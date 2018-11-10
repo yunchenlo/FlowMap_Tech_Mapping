@@ -6,6 +6,7 @@
 #include <vector>
 #include <queue>
 
+using namespace std;
 class Graph_FlowNetWorks{
 private:
     int num_vertex;
@@ -16,7 +17,7 @@ public:
     Graph_FlowNetWorks(int n);
     void AddEdge(int from, int to, int capacity);
 
-    std::vector<std::vector<int>> FordFulkerson(int source, int termination);
+    std::vector<int> FordFulkerson(int source, int termination);
     bool BFSfindExistingPath(std::vector<std::vector<int>> graphResidual, 
                              int *predecessor, int source, int termination);
     int MinCapacity(std::vector<std::vector<int>> graphResidual, 

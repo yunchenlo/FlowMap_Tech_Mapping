@@ -4,20 +4,24 @@ OBJS = main.o Graph_FlowNetWorks.o
 DEPS = Graph_FlowNetWorks.cpp
 
 BIG_K=4
-ALU4_AAG="alu4.aag"
+ALU4_AAG="testcase/alu4.aag"
 ALU4_OUT="alu4.aag_output"
 
-BIG_AAG="bigkey.aag"
+BIG_AAG="testcase/bigkey.aag"
 BIG_OUT="bigkey.aag_output"
 
-C1908_AAG="c1908.aag"
+C1908_AAG="testcase/c1908.aag"
 C1908_OUT="c1908.aag_output"
 
-C5315_AAG="c5315.aag"
+C5315_AAG="testcase/c5315.aag"
 C5315_OUT="c5315.aag_output"
 
+alu4: FlowMap.exe
+	./FlowMap.exe ${ALU4_AAG} ${BIG_K} ${ALU4_OUT}
+	./checker ${ALU4_AAG} ${BIG_K} ${ALU4_OUT}
+
 debug:FlowMap.exe
-	./FlowMap.exe my_alu.aag 4 output.aag
+	./FlowMap.exe testcase/my_alu.aag 4 output.aag
 
 FlowMap.exe:${OBJS}
 	${CPP} ${CPPFLAGS} -o $@ ${OBJS}
@@ -26,4 +30,4 @@ FlowMap.exe:${OBJS}
 	${CPP} -c -o $@ $< ${CPPFLAGS}
 
 clean: 
-	-rm -r *.o *.exe
+	-rm -r *.o *.exe *.aag

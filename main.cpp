@@ -6,6 +6,7 @@
 #include <list> 
 #include <stack>
 #include <queue>
+#include <algorithm>
 
 #include "Graph_FlowNetWorks.h"
 
@@ -101,11 +102,12 @@ void mapping(const string outfile_name)
     		}
     	}
     }
-
+	/*
     cout << endl << visited.size() << endl;
+    
     for (auto i: visited)
   		std::cout << i << ' ';
-
+	*/
   	vector<vector<int> > result;
   	result.resize(visited.size());
 
@@ -170,12 +172,13 @@ void labeling()
 
 	// by topological order, ommit one node for connecting network
 	// debug :: using node(7) index(6)
-	/*
+	
 	label[6] = 1;
 	label[7] = 1;
 	label[8] = 1;
 	label[9] = 1;
-	label[11] = 2;*/
+	label[11] = 2;
+	
 	while (topo_Stack.empty() == false) 
     { 
     	/*
@@ -183,10 +186,12 @@ void labeling()
         cout << "current_node" << topo_Stack.top()+1 << " "; 
         
 	    cout << endl;
+	    
 		for(int i = 0; i < M; i++){
 	    	cout << label[i] << " ";
 	    }
-	    cout << endl;*/
+	    cout << endl;
+	    */
 		
 	    int p = 0;
 
@@ -386,6 +391,7 @@ void labeling()
 				}
 			}
 		}
+		
 		/*
 		for(int i = 0; i < Nt_pp_num_node; i++){
 			for(int j = 0; j < Nt_pp_num_node; j++){
@@ -394,9 +400,9 @@ void labeling()
 			cout << endl;
 		}*/
 
-		std::vector<std::vector<int>> Res_ret;
-	    Res_ret = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
-	    
+		std::vector<int> visited_vec;
+	    visited_vec = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
+	    /*
 	    for(int i = 0; i < Nt_pp_num_node; i++){
 	        for(int j = 0; j < Nt_pp_num_node; j++){
 	            if(j <= i)
@@ -415,7 +421,7 @@ void labeling()
 	            	Res_ret[i][j] = 0;
 	        }
 	    }
-	    /*
+	    
 	    cout << "final ad matrix: " << endl;
 	    for(int i = 0; i < Nt_pp_num_node; i++){
 	        for(int j = 0; j < Nt_pp_num_node; j++){
@@ -423,9 +429,14 @@ void labeling()
 	        }
 	        std::cout << std::endl;
 	    }*/
+	    std::vector<bool> visited_BFS(Nt_pp_num_node, false);
+	    for(int i : visited_vec) {
+  			//cout << "i = " << i << endl;
+  			visited_BFS[i] = true; 
+	    }
 	    
-	    std::vector<bool> visited_BFS;
-	    visited_BFS = g11.BFS(Res_ret, Nt_pp_num_node-1);
+	    //std::vector<bool> visited_BFS;
+	    //visited_BFS = g11.BFS(Res_ret, Nt_pp_num_node-1);
 	    /*
 	    for(int i = 0; i < Nt_pp_num_node; i++){
 	    	std::cout << visited_BFS[i] << " ";
@@ -441,7 +452,7 @@ void labeling()
 	    //cout << "current node label:" << label[current_node] << endl;
 
 	    for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
-	    	if(visited_BFS[i]){
+	    	if(visited_BFS[i] && !input[i]){
 	    		//cout << i << " ";
 	    		kLUT_list[current_node+1].push_back(Nt_pp_index[i]);
 	    	}
@@ -449,7 +460,7 @@ void labeling()
 	    //cout << endl;
 
 	    for (int i = 1; i < M; i++ ){
-	    	if(pred_ret[i] == -10){
+	    	if(pred_ret[i] == -10 && !input[i] && label[i] == label[current_node]){
 	    		kLUT_list[current_node+1].push_back(i+1);
 	    	}
 	    }
@@ -461,7 +472,7 @@ void labeling()
 	    	cout << *itr << " ";
 	    }
 	    cout << endl;
-
+	    
 		// debug print
 		cout << "p: "<< p << endl;
 		for (int j = 0; j < M; j++) {

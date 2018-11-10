@@ -72,7 +72,7 @@ int Graph_FlowNetWorks::MinCapacity(std::vector<std::vector<int>> graph,
     return min;
 }
 
-std::vector<std::vector<int>> Graph_FlowNetWorks::FordFulkerson(int source, int termination){
+std::vector<int> Graph_FlowNetWorks::FordFulkerson(int source, int termination){
 
     // residual networks的初始狀態等於AdjMatrix, 見圖五(a)
     std::vector<std::vector<int>> graphResidual(AdjMatrix);    
@@ -91,8 +91,39 @@ std::vector<std::vector<int>> Graph_FlowNetWorks::FordFulkerson(int source, int 
         }
     }
 
+    //traverse node, and push index into vector
+    vector<int> answer(0, 0);
+    vector<int> visit(num_vertex, 0); 
+
+    queue<int> q;
+    q.push(0);
+    visit[0] = 1;
+
+    while(!q.empty())
+    {
+    int i = q.front(); q.pop();
+      
+    for(int j=0; j<num_vertex; j++)
+    {
+      if(graphResidual[i][j] && !visit[j])
+      {
+        q.push(j);
+        visit[j] = 1;
+      }
+    }
+    }
+
+    for(int i=0; i<num_vertex; i++)
+    {
+        if(!visit[i]){
+            //std::cout << i << " ";
+            answer.push_back(i);
+        }
+    } 
+    //std::cout << std::endl;
+
     //std::cout << "Possible Maximum Flow: " << maxflow << std::endl;
-    return graphResidual;
+    return answer;
 }
 void Graph_FlowNetWorks::AddEdge(int from, int to, int capacity){
 
