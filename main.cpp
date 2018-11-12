@@ -17,7 +17,7 @@ using namespace std;
 // register funtions
 void read_aag(const string infile_name);
 void topologicalSort();
-int* BFS(int Start);
+int* con_network(int Start);
 void labeling();
 void delete_mem();
 void printLabel();
@@ -170,7 +170,7 @@ void labeling()
 
 		int current_node = topo_Stack.top();
 		int *pred_ret;
-		pred_ret = BFS(current_node);
+		pred_ret = con_network(current_node);
 
 		// find p by searching all parent of current node
 		for(int i = 0; i < M; i++){
@@ -391,7 +391,7 @@ void topologicalSort()
 
 } 
 
-int* BFS(int Start){
+int* con_network(int Start){
 	int *predecessor = new int[M];  // -1:沒有predecessor, 表示為起點vertex
 	for (int i = 0; i < M; i++) {  // 初始化，如圖二(b)
         predecessor[i] = -1;       // -1表示沒有predecessor
