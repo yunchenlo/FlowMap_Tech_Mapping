@@ -116,11 +116,11 @@ std::vector<int> Graph_FlowNetWorks::FordFulkerson(int source, int termination){
     for(int i=0; i<num_vertex; i++)
     {
         if(!visit[i]){
-            std::cout << i << " ";
+            //std::cout << i << " ";
             answer.push_back(i);
         }
     } 
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
     //std::cout << "Possible Maximum Flow: " << maxflow << std::endl;
     return answer;

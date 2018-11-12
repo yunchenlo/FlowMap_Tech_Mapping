@@ -97,7 +97,7 @@ void mapping(const string outfile_name)
     					OK = false;
     			}
 
-    			if(OK && find(visited.begin(), visited.end(), fanin_node) == visited.end() && label[fanin_node-1]!=0) // check for duplication & node in LUT list
+    			if(OK && find(visited.begin(), visited.end(), fanin_node) == visited.end() && !input[fanin_node-1]) // check for duplication & node in LUT list
     				map_q.push(fanin_node);
     		}
     	}
@@ -181,12 +181,12 @@ void labeling()
 	*/
 	while (topo_Stack.empty() == false) 
     { 
-    	
+    	/*
     	cout << "=================" << endl;
         cout << "current_node" << topo_Stack.top()+1 << " "; 
         
 	    cout << endl;
-	    /*
+	    
 		for(int i = 0; i < M; i++){
 	    	cout << label[i] << " ";
 	    }
@@ -271,11 +271,13 @@ void labeling()
 			}
 		}
 		
+		/*
 		cout << "[ ";
 		for(int i = 0; i < num_Ntp_node; i++){
 			cout << Nt_p_index[i] <<" ";
 		}
 		cout << "]" << endl;
+		*/
 
 		// fill in Nt_p
 		for(int i = 0; i < M; i++){
@@ -283,15 +285,15 @@ void labeling()
 				for(int j = 0; j < num_Ntp_node; j++){
 					if(Nt_p_index[j] == current_node + 1){
 						if(input[i]){
-							Nt_p[j + num_Ntp_node*0] = 1; // s to Nt_p
+							Nt_p[num_Ntp_node*0 + j] = 1; // s to Nt_p
 						}
 						else{
 							list<int>::iterator k;
 							for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
-								if(pred_ret[*k] != -10){
+								if(pred_ret[*k] != -10 && pred_ret[*k] >=0){
 									for(int l = 0; l < num_Ntp_node; l++){
 										if(Nt_p_index[l] == *k + 1){
-											Nt_p[j + num_Ntp_node*(l)] = 1;
+											Nt_p[num_Ntp_node*(l) + j] = 1;
 										}
 									}
 								}
@@ -304,15 +306,15 @@ void labeling()
 				for(int j = 0; j < num_Ntp_node; j++){
 					if(Nt_p_index[j] == i + 1){
 						if(input[i]){
-							Nt_p[j + num_Ntp_node*0] = 1;
+							Nt_p[num_Ntp_node*0 + j] = 1;
 						}
 						else{
 							list<int>::iterator k;
 							for(k = rev_adj[i].begin(); k != rev_adj[i].end(); ++k){
-								if(pred_ret[*k] != -10){
+								if(pred_ret[*k] != -10 && pred_ret[*k] >=0){
 									for(int l = 0; l < num_Ntp_node; l++){
 										if(Nt_p_index[l] == *k + 1){
-											Nt_p[j + num_Ntp_node*(l)] = 1;
+											Nt_p[num_Ntp_node*(l) + j] = 1;
 										}
 									}
 								}
@@ -356,13 +358,13 @@ void labeling()
 			offset++;
 		}
 
-		
+		/*
 		cout << "[ ";
 		for(int i = 0 ; i < Nt_pp_num_node; i++){
 			cout << Nt_pp_index[i] << " "; 
 		}
 		cout << "]" << endl;
-		
+		*/
 
 		for(int i = 0; i < num_merge; i++){
 			for(int j = 0; j < num_merge+1; j++){
@@ -410,6 +412,8 @@ void labeling()
 
 	    cout << "returned maxflow:" << g11.get_maxflow() << endl;
 		*/
+		//cout << "p = " << p << endl;
+
 	    if (g11.get_maxflow() > K){
 	    	label[current_node] = p + 1;
 	    	kLUT_list[current_node+1].push_back(current_node+1);
@@ -417,13 +421,13 @@ void labeling()
 	    else{
 	    	label[current_node] = p;
 	    	for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
-		    	if(visited_BFS[i] && !input[i]){
+		    	if(visited_BFS[i] ){
 		    		//cout << i << " ";
 		    		kLUT_list[current_node+1].push_back(Nt_pp_index[i]);
 		    	}
 		    }
-	    	for (int i = 1; i < M; i++ ){
-		    	if(pred_ret[i] == -10 && !input[i] && label[i] == label[current_node]){
+	    	for (int i = 0; i < M; i++ ){
+		    	if(pred_ret[i] == -10  && label[i] == label[current_node]){
 		    		kLUT_list[current_node+1].push_back(i+1);
 		    	}
 		    }
@@ -446,14 +450,14 @@ void labeling()
 	    }
 	    */
 	    
-	    
+	    /*
 	    cout << "kLutlist[" << current_node+1 << "]\n";
 	    for (std::list<int>::iterator itr = kLUT_list[current_node+1].begin();        // for loop 太長
 	                     itr != kLUT_list[current_node+1].end(); itr++) {
 	    	cout << *itr << " ";
 	    }
 	    cout << endl;
-	    /*
+	    
 		// debug print
 		cout << "p: "<< p << endl;
 		for (int j = 0; j < M; j++) {
@@ -462,7 +466,6 @@ void labeling()
 	    std::cout << std::endl;*/
     	topo_Stack.pop(); 
     } 
-
 }
 
 void topologicalSortUtil(int v, bool visited[], stack<int> &topo_Stack) 
@@ -497,6 +500,60 @@ void topologicalSort()
 
 } 
 
+int* BFS(int Start){
+	int *predecessor = new int[M];  // -1:沒有predecessor, 表示為起點vertex
+	for (int i = 0; i < M; i++) {  // 初始化，如圖二(b)
+        predecessor[i] = -1;       // -1表示沒有predecessor
+    }
+	stack<int> temp;
+	temp.push(Start);
+	
+	vector<int> visited(0,0);
+  	visited.push_back(Start);
+	
+	predecessor[Start] = -10;
+	while( !temp.empty() )
+  	{
+  		int curr_node = temp.top(); 
+  		int count = 0;
+  		int left_fanin = -1, right_fanin = -1;
+  		for (std::list<int>::iterator itr = rev_adj[curr_node].begin(); itr != rev_adj[curr_node].end(); itr++) {  
+  			switch(count){
+  				case 0: left_fanin = *itr; break;
+  				case 1: right_fanin = *itr; break;
+  				default: break;
+  			}
+  			count++;
+  		}
+  		if(left_fanin == -1 && right_fanin == -1)
+  		{
+  			temp.pop();
+  			visited.push_back(curr_node);
+  			if(predecessor[curr_node] == -1)
+  				predecessor[curr_node] = 1;
+  		}
+  		else
+  		{
+  			if( find(visited.begin(), visited.end(), left_fanin)!=visited.end() && find(visited.begin(), visited.end(), right_fanin)!=visited.end()  )
+			{
+				temp.pop();
+				visited.push_back(curr_node);
+				if(predecessor[curr_node] == -1)
+  					predecessor[curr_node] = 1;
+			}
+			else
+			{
+				if(find(visited.begin(), visited.end(), left_fanin)==visited.end())    //尚未visited
+					temp.push(left_fanin);
+				if(find(visited.begin(), visited.end(), right_fanin)==visited.end())
+					temp.push(right_fanin);
+			}
+  		}
+  	}
+  	return predecessor;
+}
+
+/*
 int* BFS(int Start){
 	int *color,             // 0:白色, 1:灰色, 2:黑色
         *distance,          // 0:起點, 無限大:從起點走不到的vertex
@@ -545,6 +602,7 @@ int* BFS(int Start){
     
     return predecessor;
 }
+*/
 
 
 void read_aag(const string infile_name)

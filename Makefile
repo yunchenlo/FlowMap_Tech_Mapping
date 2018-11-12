@@ -33,7 +33,7 @@ c5315: FlowMap.exe
 #	./checker ${C5315_AAG} ${BIG_K} ${C5315_OUT}
 
 debug:FlowMap.exe
-	./FlowMap.exe testcase/my_alu.aag 4 output.aag
+	./FlowMap.exe testcase/my_alu.aag 3 output.aag
 
 FlowMap.exe:${OBJS}
 	${CPP} ${CPPFLAGS} -o $@ ${OBJS}
