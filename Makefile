@@ -42,4 +42,4 @@ FlowMap.exe:${OBJS}
 	${CPP} -c -o $@ $< ${CPPFLAGS}
 
 clean: 
-	-rm -r *.o *.exe *.aag *.aag_output
+	-rm -r *.o *.exe *.aag_output
