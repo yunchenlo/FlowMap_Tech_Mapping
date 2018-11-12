@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     labeling();
 
-    printLabel();
+    //printLabel();
 
     /*
     == Mapping Phase ==
@@ -102,12 +102,7 @@ void mapping(const string outfile_name)
     		}
     	}
     }
-	/*
-    cout << endl << visited.size() << endl;
-    
-    for (auto i: visited)
-  		std::cout << i << ' ';
-	*/
+
   	vector<vector<int> > result;
   	result.resize(visited.size());
 
@@ -116,10 +111,8 @@ void mapping(const string outfile_name)
 
   		for (list<int>::iterator itr = kLUT_list[ID].begin(); itr != kLUT_list[ID].end(); itr++) {
 			int lut_node = *itr;
-			//cout << "lut: " << lut_node;
 			for(list<int>::iterator k = rev_adj[lut_node-1].begin(); k != rev_adj[lut_node-1].end(); k++){
     			int fanin_node = *k + 1;
-    			//cout << fanin_node << endl;
 
     			bool OK = true;
     			for (list<int>::iterator itr1 = kLUT_list[ID].begin(); itr1 != kLUT_list[ID].end(); itr1++) {
@@ -127,7 +120,6 @@ void mapping(const string outfile_name)
     					OK = false;
     			}
     			if(OK && find(result[i].begin(), result[i].end(), fanin_node)==result[i].end()){ // check for duplication & node in LUT list
-    				//cout << "OK" << endl;
     				result[i].push_back(fanin_node);
     			}
     		}
@@ -166,32 +158,13 @@ void labeling()
 			label[i] = 0;
 		else
 			label[i] = -1;	
-		//cout << label[i] << " ";
 	}
-	//cout << endl;
 
 	// by topological order, ommit one node for connecting network
-	// debug :: using node(7) index(6)
-	/*
-	label[6] = 1;
-	label[7] = 1;
-	label[8] = 1;
-	label[9] = 1;
-	label[11] = 2;
-	*/
+	
 	while (topo_Stack.empty() == false) 
     { 
-    	/*
-    	cout << "=================" << endl;
-        cout << "current_node" << topo_Stack.top()+1 << " "; 
-        
-	    cout << endl;
-	    
-		for(int i = 0; i < M; i++){
-	    	cout << label[i] << " ";
-	    }
-	    cout << endl;
-	    */
+    	
 		
 	    int p = 0;
 
@@ -205,30 +178,13 @@ void labeling()
 				p = (p < label[i]) ? label[i] : p;
 			}
 		}
-		/*
-		cout << "p:" << p << endl;
-		cout << endl;
-		for(int i = 0; i < M; i++){
-				cout << pred_ret[i] << " " ;
-		}
-		cout << endl;
-		*/
+		
 		// Nt -> Nt'
 		for(int i = 0; i < M; i++){
 			if(p == label[i] && pred_ret[i]>=0)
 				pred_ret[i] = -10;
 		}
-		/*
-		cout << "=======" << endl ;
-		for(int i = 0; i < M; i++){
-				cout << label[i] << " " ;
-		}
-		cout << endl;
 		
-		for(int i = 0; i < M; i++){
-				cout << pred_ret[i] << " " ;
-		}
-		cout << endl;*/
 
 		int num_merge = 0;
 		bool set = false;
@@ -271,13 +227,7 @@ void labeling()
 			}
 		}
 		
-		/*
-		cout << "[ ";
-		for(int i = 0; i < num_Ntp_node; i++){
-			cout << Nt_p_index[i] <<" ";
-		}
-		cout << "]" << endl;
-		*/
+		
 
 		// fill in Nt_p
 		for(int i = 0; i < M; i++){
@@ -326,13 +276,7 @@ void labeling()
 		}
 
 
-		/*
-		for(int i = 0; i < num_merge+1; i++){
-			for(int j = 0; j < num_merge+1; j++){
-				cout << Nt_p[i*(num_merge+1)+j] <<" ";
-			}
-			cout << endl;
-		}*/
+		
 
 		// Nt' -> Nt''
 		int num_mid = num_merge -1;
@@ -358,13 +302,7 @@ void labeling()
 			offset++;
 		}
 
-		/*
-		cout << "[ ";
-		for(int i = 0 ; i < Nt_pp_num_node; i++){
-			cout << Nt_pp_index[i] << " "; 
-		}
-		cout << "]" << endl;
-		*/
+		
 
 		for(int i = 0; i < num_merge; i++){
 			for(int j = 0; j < num_merge+1; j++){
@@ -385,13 +323,7 @@ void labeling()
 			}
 		}
 		
-		/*
-		for(int i = 0; i < Nt_pp_num_node; i++){
-			for(int j = 0; j < Nt_pp_num_node; j++){
-				cout << Nt_pp[i*Nt_pp_num_node+j] <<" ";
-			}
-			cout << endl;
-		}*/
+		
 
 		std::vector<int> visited_vec;
 	    visited_vec = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
@@ -402,17 +334,7 @@ void labeling()
   			visited_BFS[i] = true; 
 	    }
 	    
-	    //std::vector<bool> visited_BFS;
-	    //visited_BFS = g11.BFS(Res_ret, Nt_pp_num_node-1);
-	    /*
-	    for(int i = 0; i < Nt_pp_num_node; i++){
-	    	std::cout << visited_BFS[i] << " ";
-	    }
-	    std::cout << std::endl;
-
-	    cout << "returned maxflow:" << g11.get_maxflow() << endl;
-		*/
-		//cout << "p = " << p << endl;
+	    
 
 	    if (g11.get_maxflow() > K){
 	    	label[current_node] = p + 1;
@@ -433,37 +355,6 @@ void labeling()
 		    }
 	    }
 
-	    //cout << "current node label:" << label[current_node] << endl;
-	    /*
-	    for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
-	    	if(visited_BFS[i] && !input[i]){
-	    		//cout << i << " ";
-	    		kLUT_list[current_node+1].push_back(Nt_pp_index[i]);
-	    	}
-	    }
-	    //cout << endl;
-
-	    for (int i = 1; i < M; i++ ){
-	    	if(pred_ret[i] == -10 && !input[i] && label[i] == label[current_node]){
-	    		kLUT_list[current_node+1].push_back(i+1);
-	    	}
-	    }
-	    */
-	    
-	    /*
-	    cout << "kLutlist[" << current_node+1 << "]\n";
-	    for (std::list<int>::iterator itr = kLUT_list[current_node+1].begin();        // for loop 太長
-	                     itr != kLUT_list[current_node+1].end(); itr++) {
-	    	cout << *itr << " ";
-	    }
-	    cout << endl;
-	    
-		// debug print
-		cout << "p: "<< p << endl;
-		for (int j = 0; j < M; j++) {
-	        std::cout << pred_ret[j] << " ";
-	    }
-	    std::cout << std::endl;*/
     	topo_Stack.pop(); 
     } 
 }
@@ -507,7 +398,7 @@ int* BFS(int Start){
     }
 	stack<int> temp;
 	temp.push(Start);
-	
+
 	vector<int> visited(0,0);
   	visited.push_back(Start);
 	
@@ -552,57 +443,6 @@ int* BFS(int Start){
   	}
   	return predecessor;
 }
-
-/*
-int* BFS(int Start){
-	int *color,             // 0:白色, 1:灰色, 2:黑色
-        *distance,          // 0:起點, 無限大:從起點走不到的vertex
-        *predecessor;       // -1:沒有predecessor, 表示為起點vertex
-    color = new int[M];
-    predecessor = new int[M];
-    distance = new int[M];
-
-    for (int i = 0; i < M; i++) {  // 初始化，如圖二(b)
-        color[i] = 0;              // 0:白色;
-        predecessor[i] = -1;       // -1表示沒有predecessor
-        distance[i] = M+1;         // M個vertex, 
-    }                              // 最長距離 distance = M -1條edge
-
-    std::queue<int> q;
-    int i = Start;
-
-    for (int j = 0; j < M; j++) {  // j從0數到M-1, 因此j會走過graph中所有vertex
-        if (color[i] == 0) {       // 第一次i會是起點vertex, 如圖二(c)
-            color[i] = 1;          // 1:灰色
-            distance[i] = 0;       // 每一個connected component的起點之距離設成0
-            predecessor[i] = -1;    // 每一個connected component的起點沒有predecessor
-            q.push(i);
-            while (!q.empty()) {
-                int u = q.front();                  // u 為新的搜尋起點
-                for (std::list<int>::iterator itr = rev_adj[u].begin();        // for loop 太長
-                     itr != rev_adj[u].end(); itr++) {                         // 分成兩段
-                    if (color[*itr] == 0) {                // 若被「找到」的vertex是白色
-                        color[*itr] = 1;                   // 塗成灰色, 表示已經被「找到」
-                        distance[*itr] = distance[u] + 1;  // 距離是predecessor之距離加一
-                        predecessor[*itr] = u;             // 更新被「找到」的vertex的predecessor
-                        q.push(*itr);                      // 把vertex推進queue
-                    }
-                }
-                q.pop();        // 把u移出queue
-                color[u] = 2;   // 並且把u塗成黑色
-            }
-        }
-        // 若一次回圈沒有把所有vertex走過, 表示graph有多個connected component
-        // 就把i另成j, 繼續檢查graph中的其他vertex是否仍是白色, 若是, 重複while loop
-        i = j;
-    }
-
-    // set the start point to -10
-    predecessor[Start] = -10;
-    
-    return predecessor;
-}
-*/
 
 
 void read_aag(const string infile_name)
