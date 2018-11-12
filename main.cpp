@@ -97,7 +97,7 @@ void mapping(const string outfile_name)
     					OK = false;
     			}
 
-    			if(OK && find(visited.begin(), visited.end(), fanin_node) == visited.end() && !input[fanin_node-1]) // check for duplication & node in LUT list
+    			if(OK && find(visited.begin(), visited.end(), fanin_node) == visited.end() && label[fanin_node-1]!=0) // check for duplication & node in LUT list
     				map_q.push(fanin_node);
     		}
     	}
@@ -446,14 +446,14 @@ void labeling()
 	    }
 	    */
 	    
-	    /*
+	    
 	    cout << "kLutlist[" << current_node+1 << "]\n";
 	    for (std::list<int>::iterator itr = kLUT_list[current_node+1].begin();        // for loop 太長
 	                     itr != kLUT_list[current_node+1].end(); itr++) {
 	    	cout << *itr << " ";
 	    }
 	    cout << endl;
-	    
+	    /*
 		// debug print
 		cout << "p: "<< p << endl;
 		for (int j = 0; j < M; j++) {
