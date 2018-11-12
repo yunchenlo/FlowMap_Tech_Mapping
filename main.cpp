@@ -172,21 +172,21 @@ void labeling()
 
 	// by topological order, ommit one node for connecting network
 	// debug :: using node(7) index(6)
-	
+	/*
 	label[6] = 1;
 	label[7] = 1;
 	label[8] = 1;
 	label[9] = 1;
 	label[11] = 2;
-	
+	*/
 	while (topo_Stack.empty() == false) 
     { 
-    	/*
+    	
     	cout << "=================" << endl;
         cout << "current_node" << topo_Stack.top()+1 << " "; 
         
 	    cout << endl;
-	    
+	    /*
 		for(int i = 0; i < M; i++){
 	    	cout << label[i] << " ";
 	    }
@@ -224,6 +224,7 @@ void labeling()
 				cout << label[i] << " " ;
 		}
 		cout << endl;
+		
 		for(int i = 0; i < M; i++){
 				cout << pred_ret[i] << " " ;
 		}
@@ -269,12 +270,12 @@ void labeling()
 				offset++;
 			}
 		}
-		/*
+		
 		cout << "[ ";
 		for(int i = 0; i < num_Ntp_node; i++){
 			cout << Nt_p_index[i] <<" ";
 		}
-		cout << "]" << endl;*/
+		cout << "]" << endl;
 
 		// fill in Nt_p
 		for(int i = 0; i < M; i++){
@@ -322,6 +323,7 @@ void labeling()
 			}
 		}
 
+
 		/*
 		for(int i = 0; i < num_merge+1; i++){
 			for(int j = 0; j < num_merge+1; j++){
@@ -354,40 +356,29 @@ void labeling()
 			offset++;
 		}
 
-		/*
+		
 		cout << "[ ";
 		for(int i = 0 ; i < Nt_pp_num_node; i++){
 			cout << Nt_pp_index[i] << " "; 
 		}
 		cout << "]" << endl;
-		*/
+		
 
-		// fill in Nt_pp
-		// mid node decompose
-		for(int i = 1; i < Nt_pp_num_node-1; i = i+2){
-			g11.AddEdge(i, i+1, 1);
-			Nt_pp[i*Nt_pp_num_node+(i+1)] = 1;
-		}
-		// for PI(s)
-		for(int j = 0; j < num_merge+1; j++){
-			if(Nt_p[0*(num_merge+1)+j]){
-				g11.AddEdge(0, 2*j-1, INF);
-				Nt_pp[0*Nt_pp_num_node+(2*j-1)] = INF;
-			}
-		}
-		// for PO
-		for(int i = 0; i < num_merge+1; i++){
-			if(Nt_p[i*(num_merge+1)+(num_merge)]){
-				g11.AddEdge(2*i, Nt_pp_num_node-1, INF);
-				Nt_pp[(2*i)*Nt_pp_num_node+Nt_pp_num_node-1] = INF;
-			}
-		}
-		// for mid node
-		for(int i = 1; i < num_merge; i++){
-			for(int j = 1; j < num_merge; j++){
-				if(Nt_p[i*(num_merge+1)+j]){
-					g11.AddEdge(2*i, 2*j-1, INF);
-					Nt_pp[(2*i)*Nt_pp_num_node+(2*j-1)] = INF;
+		for(int i = 0; i < num_merge; i++){
+			for(int j = 0; j < num_merge+1; j++){
+				if(Nt_p[i*(num_merge+1)+j] && i==0){
+					int to = 2*j-1;
+					g11.AddEdge(0, to, INF);
+					Nt_pp[0*Nt_pp_num_node+(to)] = INF;
+				}
+				else if(Nt_p[i*(num_merge+1)+j]){
+					int from = 2*i-1;
+					int mid = 2*i;
+					int to = 2*j-1;
+					g11.AddEdge(from, mid, 1);
+					g11.AddEdge(mid, to, INF);
+					Nt_pp[from*Nt_pp_num_node+(mid)] = 1;
+					Nt_pp[mid*Nt_pp_num_node+(to)] = INF;
 				}
 			}
 		}
@@ -402,33 +393,7 @@ void labeling()
 
 		std::vector<int> visited_vec;
 	    visited_vec = g11.FordFulkerson(0, Nt_pp_num_node-1);    // 指定source為vertex(0), termination為vertex(5)
-	    /*
-	    for(int i = 0; i < Nt_pp_num_node; i++){
-	        for(int j = 0; j < Nt_pp_num_node; j++){
-	            if(j <= i)
-	            	Res_ret[i][j] = 0;
-	        }
-	    }
-	    for(int i = 0; i < Nt_pp_num_node; i++){
-	        for(int j = 0; j < Nt_pp_num_node; j++){
-	            if(j <= i)
-	            	Res_ret[i][j] = Res_ret[j][i];
-	        }
-	    }
-	    for(int i = 0; i < Nt_pp_num_node; i++){
-	        for(int j = 0; j < Nt_pp_num_node; j++){
-	            if(j > i)
-	            	Res_ret[i][j] = 0;
-	        }
-	    }
 	    
-	    cout << "final ad matrix: " << endl;
-	    for(int i = 0; i < Nt_pp_num_node; i++){
-	        for(int j = 0; j < Nt_pp_num_node; j++){
-	            std::cout << Res_ret[i][j] << " ";
-	        }
-	        std::cout << std::endl;
-	    }*/
 	    std::vector<bool> visited_BFS(Nt_pp_num_node, false);
 	    for(int i : visited_vec) {
   			//cout << "i = " << i << endl;
@@ -443,14 +408,29 @@ void labeling()
 	    }
 	    std::cout << std::endl;
 
-	    cout << "returned maxflow:" << g11.get_maxflow() << endl;*/
-	    if (g11.get_maxflow() > K)
+	    cout << "returned maxflow:" << g11.get_maxflow() << endl;
+		*/
+	    if (g11.get_maxflow() > K){
 	    	label[current_node] = p + 1;
-	    else
+	    	kLUT_list[current_node+1].push_back(current_node+1);
+	    }
+	    else{
 	    	label[current_node] = p;
+	    	for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
+		    	if(visited_BFS[i] && !input[i]){
+		    		//cout << i << " ";
+		    		kLUT_list[current_node+1].push_back(Nt_pp_index[i]);
+		    	}
+		    }
+	    	for (int i = 1; i < M; i++ ){
+		    	if(pred_ret[i] == -10 && !input[i] && label[i] == label[current_node]){
+		    		kLUT_list[current_node+1].push_back(i+1);
+		    	}
+		    }
+	    }
 
 	    //cout << "current node label:" << label[current_node] << endl;
-
+	    /*
 	    for (int i = 1; i < Nt_pp_num_node-1; i=i+2){
 	    	if(visited_BFS[i] && !input[i]){
 	    		//cout << i << " ";
@@ -464,6 +444,7 @@ void labeling()
 	    		kLUT_list[current_node+1].push_back(i+1);
 	    	}
 	    }
+	    */
 	    
 	    /*
 	    cout << "kLutlist[" << current_node+1 << "]\n";
